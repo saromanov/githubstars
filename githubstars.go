@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	DBNAME = "githubstars"
+	DBNAME     = "githubstars"
+	COLLECTION = "stars"
 )
 
 type GithubStars struct {
@@ -33,7 +34,6 @@ func Init() *GithubStars {
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
 	gs.mongosession = initMongo()
-	gs.db = gs.mongosession.DB(DBNAME).C("stars1")
 	gs.limit = 3
 	return gs
 }
@@ -59,6 +59,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 		panic(err)
 	}
 
+	gs.db = gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
 	for i, repo := range result.Repositories {
 		words := splitDescription(*repo.Description)
 		for _, word := range words {
@@ -91,6 +92,19 @@ func (gs *GithubStars) collectionSize() int {
 		return 0
 	}
 	return len(count)
+}
+
+//This method returns collection name for writing data
+//It needs because we have limit of number of collections and
+//if reading collection = limit collection, write data to
+//collection1 name.I.E overwwrite data.
+func (gs *GithubStars) getWriteCollectionName() string {
+	size := gs.collectionSize()
+	if size == 0 || size >= gs.limit {
+		return "stars1"
+	} else {
+		return fmt.Sprintf("%s%d", COLLECTION, size+1)
+	}
 }
 
 func (gs *GithubStars) setData(title string, starscount int) {
