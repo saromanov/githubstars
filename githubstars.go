@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+const (
+	DBNAME = "githubstars"
+)
+
 type GithubStars struct {
 	client       *github.Client
 	popularwords map[string]int
@@ -29,7 +33,7 @@ func Init() *GithubStars {
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
 	gs.mongosession = initMongo()
-	gs.db = gs.mongosession.DB("githubstars").C("stars1")
+	gs.db = gs.mongosession.DB(DBNAME).C("stars1")
 	gs.limit = 3
 	return gs
 }
@@ -79,6 +83,14 @@ func (gs *GithubStars) getData() []StarsInfo {
 		panic(err)
 	}
 	return sinfo
+}
+
+func (gs *GithubStars) collectionSize() int {
+	count, err := gs.mongosession.DB(DBNAME).CollectionNames()
+	if err != nil {
+		return 0
+	}
+	return len(count)
 }
 
 func (gs *GithubStars) setData(title string, starscount int) {
