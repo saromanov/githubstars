@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/google/go-github/github"
 	"gopkg.in/mgo.v2"
-	//"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/bson"
 	"os"
 	"strings"
 )
@@ -14,6 +14,13 @@ type GithubStars struct {
 	popularwords map[string]int
 	repos        map[int]github.Repository
 	mongosession *mgo.Session
+	db           *mgo.Collection
+	limit        int
+}
+
+type StarsInfo struct {
+	Title    string
+	NumStars int
 }
 
 func Init() *GithubStars {
@@ -22,6 +29,8 @@ func Init() *GithubStars {
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
 	gs.mongosession = initMongo()
+	gs.db = gs.mongosession.DB("githubstars").C("stars1")
+	gs.limit = 3
 	return gs
 }
 
@@ -57,8 +66,27 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 			}
 		}
 		gs.repos[i] = repo
-		fmt.Println(*repo.FullName, *repo.StargazersCount)
+		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
+
+	gs.getData()
+}
+
+func (gs *GithubStars) getData() []StarsInfo {
+	var sinfo []StarsInfo
+	err := gs.db.Find(bson.M{}).All(&sinfo)
+	if err != nil {
+		panic(err)
+	}
+	return sinfo
+}
+
+func (gs *GithubStars) setData(title string, starscount int) {
+	err := gs.db.Insert(&StarsInfo{title, starscount})
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 func splitDescription(desc string) []string {
