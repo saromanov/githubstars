@@ -3,6 +3,9 @@ package githubstars
 import (
 	"fmt"
 	"github.com/google/go-github/github"
+	"gopkg.in/mgo.v2"
+	//"gopkg.in/mgo.v2/bson"
+	"os"
 	"strings"
 )
 
@@ -10,6 +13,7 @@ type GithubStars struct {
 	client       *github.Client
 	popularwords map[string]int
 	repos        map[int]github.Repository
+	mongosession *mgo.Session
 }
 
 func Init() *GithubStars {
@@ -17,7 +21,17 @@ func Init() *GithubStars {
 	gs.client = github.NewClient(nil)
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
+	gs.mongosession = initMongo()
 	return gs
+}
+
+func initMongo() *mgo.Session {
+	sess, err := mgo.Dial("localhost:27017")
+	if err != nil {
+		fmt.Printf("Can't connect to mongo, go error %v\n", err)
+		os.Exit(1)
+	}
+	return sess
 }
 
 func (gs *GithubStars) Get(numstars, str, language string) {
@@ -43,7 +57,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 			}
 		}
 		gs.repos[i] = repo
-		//fmt.Println(*repo.FullName, *repo.StargazersCount, splitDescription(*repo.Description))
+		fmt.Println(*repo.FullName, *repo.StargazersCount)
 	}
 }
 
