@@ -60,6 +60,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 	}
 
 	gs.db = gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	repos := []StarsInfo{}
 	for i, repo := range result.Repositories {
 		words := splitDescription(*repo.Description)
 		for _, word := range words {
@@ -71,15 +72,28 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 			}
 		}
 		gs.repos[i] = repo
+		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
 		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
 
-	gs.getData()
+	gs.outputResults(repos)
+
 }
 
-func (gs *GithubStars) getData() []StarsInfo {
+//THis private method provides output and comparing and formatting results
+func (gs *GithubStars) outputResults(current []StarsInfo) {
+	result1 := gs.getData("stars2")
+	//result2 := gs.getData("stars3")
+
+	for i, repo := range result1 {
+		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars)
+	}
+}
+
+func (gs *GithubStars) getData(collname string) []StarsInfo {
 	var sinfo []StarsInfo
-	err := gs.db.Find(bson.M{}).All(&sinfo)
+	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	err := db.Find(bson.M{}).All(&sinfo)
 	if err != nil {
 		panic(err)
 	}
