@@ -19,6 +19,7 @@ type GithubStars struct {
 	client       *github.Client
 	popularwords map[string]int
 	repos        map[int]github.Repository
+	currentrepos []github.Repository
 	mongosession *mgo.Session
 	db           *mgo.Collection
 	limit        int
@@ -35,6 +36,7 @@ func Init() *GithubStars {
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
 	gs.mongosession = initMongo()
+	gs.currentrepos = []github.Repository{}
 	gs.limit = 3
 	return gs
 }
@@ -62,6 +64,7 @@ func (gs *GithubStars) Show(numstars, str, language string) {
 		panic(err)
 	}
 
+	gs.currentrepos = result.Repositories
 	gs.db = gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
 	repos := []StarsInfo{}
 	log.Printf("Results...")
@@ -77,16 +80,29 @@ func (gs *GithubStars) Show(numstars, str, language string) {
 		}
 		gs.repos[i] = repo
 		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
-		//gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
 
 	gs.outputResults(repos)
 
 }
 
+//Commit provides write to mongodb current results
+func (gs *GithubStars) Commit() {
+	if len(gs.currentrepos) == 0 {
+		log.Printf("Can't find current repositories for commit")
+		return
+	}
+	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	db.DropCollection()
+	for _, repo := range gs.currentrepos {
+		gs.setData(*repo.FullName, *repo.StargazersCount)
+	}
+
+}
+
 //THis private method provides output and comparing and formatting results
 func (gs *GithubStars) outputResults(current []StarsInfo) {
-	result1 := gs.getData("stars2")
+	result1 := gs.getData("stars1")
 	//result2 := gs.getData("stars3")
 
 	for i, repo := range result1 {
@@ -124,12 +140,13 @@ func (gs *GithubStars) collectionSize() int {
 //if reading collection = limit collection, write data to
 //collection1 name.I.E overwwrite data.
 func (gs *GithubStars) getWriteCollectionName() string {
-	size := gs.collectionSize()
+	return "stars1"
+	/*size := gs.collectionSize()
 	if size == 0 || size >= gs.limit {
 		return "stars1"
 	} else {
 		return fmt.Sprintf("%s%d", COLLECTION, size+1)
-	}
+	}*/
 }
 
 func (gs *GithubStars) setData(title string, starscount int) {
