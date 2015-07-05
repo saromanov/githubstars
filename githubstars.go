@@ -5,6 +5,7 @@ import (
 	"github.com/google/go-github/github"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	"os"
 	"strings"
 )
@@ -39,6 +40,7 @@ func Init() *GithubStars {
 }
 
 func initMongo() *mgo.Session {
+	log.Printf("Connection to the Mongodb...")
 	sess, err := mgo.Dial("localhost:27017")
 	if err != nil {
 		fmt.Printf("Can't connect to mongo, go error %v\n", err)
@@ -54,6 +56,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 	}
 	query += fmt.Sprintf("stars:%s", numstars)
 	opt := &github.SearchOptions{Sort: "stars"}
+	log.Printf("Request to Github...")
 	result, _, err := gs.client.Search.Repositories(query, opt)
 	if err != nil {
 		panic(err)
@@ -61,6 +64,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 
 	gs.db = gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
 	repos := []StarsInfo{}
+	log.Printf("Results...")
 	for i, repo := range result.Repositories {
 		words := splitDescription(*repo.Description)
 		for _, word := range words {
