@@ -90,7 +90,14 @@ func (gs *GithubStars) outputResults(current []StarsInfo) {
 	//result2 := gs.getData("stars3")
 
 	for i, repo := range result1 {
-		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars)
+		diff := current[i].NumStars - repo.NumStars
+		diffmsg := ""
+		if diff > 0 {
+			diffmsg = fmt.Sprintf("(+ %d)", diff)
+		} else if diff < 0 {
+			diffmsg = fmt.Sprintf("(- %d", repo.NumStars-current[i].NumStars)
+		}
+		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars, diffmsg)
 	}
 }
 
