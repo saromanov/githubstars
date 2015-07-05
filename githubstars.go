@@ -49,7 +49,7 @@ func initMongo() *mgo.Session {
 	return sess
 }
 
-func (gs *GithubStars) Get(numstars, str, language string) {
+func (gs *GithubStars) Show(numstars, str, language string) {
 	query := ""
 	if language != "" {
 		query = fmt.Sprintf("language:%s ", language)
@@ -77,7 +77,7 @@ func (gs *GithubStars) Get(numstars, str, language string) {
 		}
 		gs.repos[i] = repo
 		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
-		gs.setData(*repo.FullName, *repo.StargazersCount)
+		//gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
 
 	gs.outputResults(repos)
