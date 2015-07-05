@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	DBNAME     = "githubstars"
+	//DBNAME current db in mongodb
+	DBNAME = "githubstars"
+	//COLLECTION should be replaced to search title
 	COLLECTION = "stars"
 )
 
-type GithubStars struct {
+type githubstars struct {
 	client       *github.Client
 	popularwords map[string]int
 	repos        map[int]github.Repository
@@ -30,8 +32,8 @@ type StarsInfo struct {
 	NumStars int
 }
 
-func Init() *GithubStars {
-	gs := new(GithubStars)
+func Init() *githubstars {
+	gs := new(githubstars)
 	gs.client = github.NewClient(nil)
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
@@ -51,7 +53,7 @@ func initMongo() *mgo.Session {
 	return sess
 }
 
-func (gs *GithubStars) Show(numstars, str, language string) {
+func (gs *githubstars) Show(numstars, str, language string) {
 	query := ""
 	if language != "" {
 		query = fmt.Sprintf("language:%s ", language)
@@ -87,7 +89,7 @@ func (gs *GithubStars) Show(numstars, str, language string) {
 }
 
 //Commit provides write to mongodb current results
-func (gs *GithubStars) Commit() {
+func (gs *githubstars) Commit() {
 	if len(gs.currentrepos) == 0 {
 		log.Printf("Can't find current repositories for commit")
 		return
@@ -101,7 +103,7 @@ func (gs *GithubStars) Commit() {
 }
 
 //THis private method provides output and comparing and formatting results
-func (gs *GithubStars) outputResults(current []StarsInfo) {
+func (gs *githubstars) outputResults(current []StarsInfo) {
 	result1 := gs.getData("stars1")
 	//result2 := gs.getData("stars3")
 
@@ -117,7 +119,7 @@ func (gs *GithubStars) outputResults(current []StarsInfo) {
 	}
 }
 
-func (gs *GithubStars) getData(collname string) []StarsInfo {
+func (gs *githubstars) getData(collname string) []StarsInfo {
 	var sinfo []StarsInfo
 	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
 	err := db.Find(bson.M{}).All(&sinfo)
@@ -127,7 +129,7 @@ func (gs *GithubStars) getData(collname string) []StarsInfo {
 	return sinfo
 }
 
-func (gs *GithubStars) collectionSize() int {
+func (gs *githubstars) collectionSize() int {
 	count, err := gs.mongosession.DB(DBNAME).CollectionNames()
 	if err != nil {
 		return 0
@@ -139,7 +141,7 @@ func (gs *GithubStars) collectionSize() int {
 //It needs because we have limit of number of collections and
 //if reading collection = limit collection, write data to
 //collection1 name.I.E overwwrite data.
-func (gs *GithubStars) getWriteCollectionName() string {
+func (gs *githubstars) getWriteCollectionName() string {
 	return "stars1"
 	/*size := gs.collectionSize()
 	if size == 0 || size >= gs.limit {
@@ -149,7 +151,7 @@ func (gs *GithubStars) getWriteCollectionName() string {
 	}*/
 }
 
-func (gs *GithubStars) setData(title string, starscount int) {
+func (gs *githubstars) setData(title string, starscount int) {
 	err := gs.db.Insert(&StarsInfo{title, starscount})
 	if err != nil {
 		panic(err)
