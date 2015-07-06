@@ -95,7 +95,7 @@ func (gs *githubstars) Show(numstars, str, language string) {
 		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
 	}
 
-	gs.outputResults(repos)
+	gs.outputResults(repos, "stars1")
 
 }
 
@@ -113,9 +113,23 @@ func (gs *githubstars) Commit() {
 
 }
 
+//CompareWith provides comparation with results
+func (gs *githubstars) CompareWith(dbtitle string) {
+	data := gs.getData(dbtitle)
+	if len(data) == 0 {
+		return
+	}
+	alldata := []StarsInfo{}
+	for _, value := range gs.repos {
+		alldata = append(alldata, StarsInfo{*value.FullName, *value.StargazersCount})
+	}
+	gs.outputResults(alldata, dbtitle)
+
+}
+
 //THis private method provides output and comparing and formatting results
-func (gs *githubstars) outputResults(current []StarsInfo) {
-	result1 := gs.getData("stars1")
+func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
+	result1 := gs.getData(collname)
 	//result2 := gs.getData("stars3")
 	summ := summary{}
 	summ.most = record{}
@@ -142,7 +156,7 @@ func (gs *githubstars) outputResults(current []StarsInfo) {
 //get data from mongo
 func (gs *githubstars) getData(collname string) []StarsInfo {
 	var sinfo []StarsInfo
-	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	db := gs.mongosession.DB(DBNAME).C(collname)
 	err := db.Find(bson.M{}).All(&sinfo)
 	if err != nil {
 		panic(err)
