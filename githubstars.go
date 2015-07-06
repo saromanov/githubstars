@@ -53,6 +53,7 @@ func initMongo() *mgo.Session {
 	return sess
 }
 
+//Show provides output information
 func (gs *githubstars) Show(numstars, str, language string) {
 	query := ""
 	if language != "" {
@@ -119,6 +120,7 @@ func (gs *githubstars) outputResults(current []StarsInfo) {
 	}
 }
 
+//get data from mongo
 func (gs *githubstars) getData(collname string) []StarsInfo {
 	var sinfo []StarsInfo
 	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
@@ -129,6 +131,7 @@ func (gs *githubstars) getData(collname string) []StarsInfo {
 	return sinfo
 }
 
+//return number of records from collection
 func (gs *githubstars) collectionSize() int {
 	count, err := gs.mongosession.DB(DBNAME).CollectionNames()
 	if err != nil {
