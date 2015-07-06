@@ -32,6 +32,16 @@ type StarsInfo struct {
 	NumStars int
 }
 
+//summary provides some stat information before output
+type summary struct {
+	most record
+}
+
+type record struct {
+	title string
+	item  int
+}
+
 func Init() *githubstars {
 	gs := new(githubstars)
 	gs.client = github.NewClient(nil)
@@ -107,10 +117,15 @@ func (gs *githubstars) Commit() {
 func (gs *githubstars) outputResults(current []StarsInfo) {
 	result1 := gs.getData("stars1")
 	//result2 := gs.getData("stars3")
-
+	summ := summary{}
+	summ.most = record{}
 	for i, repo := range result1 {
 		diff := current[i].NumStars - repo.NumStars
 		diffmsg := ""
+		if summ.most.item < diff {
+			summ.most.item = diff
+			summ.most.title = repo.Title
+		}
 		if diff > 0 {
 			diffmsg = fmt.Sprintf("(+ %d)", diff)
 		} else if diff < 0 {
@@ -118,6 +133,10 @@ func (gs *githubstars) outputResults(current []StarsInfo) {
 		}
 		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars, diffmsg)
 	}
+
+	log.Printf("Summary...")
+	fmt.Println(" ")
+	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
 }
 
 //get data from mongo
