@@ -109,7 +109,7 @@ func (gs *githubstars) Show(numstars, str, language string) {
 //Commit provides write to mongodb current results
 func (gs *githubstars) Commit() {
 	if len(gs.currentrepos) == 0 {
-		log.Printf("Can't find current repositories for commit")
+		log.Fatal("Can't find current repositories for commit")
 		return
 	}
 	db := gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
