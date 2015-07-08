@@ -128,7 +128,7 @@ func (gs *githubstars) CompareWith(dbtitle string) {
 
 }
 
-//THis private method provides output and comparing and formatting results
+//This private method provides output and comparing and formatting results
 func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
 	result1 := gs.getData(collname)
 	//result2 := gs.getData("stars3")
