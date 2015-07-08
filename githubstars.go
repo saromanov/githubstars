@@ -34,7 +34,8 @@ type StarsInfo struct {
 
 //summary provides some stat information before output
 type summary struct {
-	most record
+	most         record
+	fewest_stars record
 }
 
 type record struct {
@@ -133,6 +134,8 @@ func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
 	//result2 := gs.getData("stars3")
 	summ := summary{}
 	summ.most = record{}
+	summ.fewest_stars = record{}
+	summ.fewest_stars.item = 99999999
 	for i, repo := range result1 {
 		diff := current[i].NumStars - repo.NumStars
 		diffmsg := ""
@@ -140,6 +143,12 @@ func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
 			summ.most.item = diff
 			summ.most.title = repo.Title
 		}
+
+		if summ.fewest_stars.item >= diff {
+			summ.fewest_stars.item = diff
+			summ.fewest_stars.title = repo.Title
+		}
+
 		if diff > 0 {
 			diffmsg = fmt.Sprintf("(+ %d)", diff)
 		} else if diff < 0 {
@@ -151,6 +160,8 @@ func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
 	log.Printf("Summary...")
 	fmt.Println(" ")
 	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
+	fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
+		summ.fewest_stars.title, summ.fewest_stars.item))
 }
 
 //get data from mongo
