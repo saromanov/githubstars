@@ -14,7 +14,7 @@ const (
 	//DBNAME current db in mongodb
 	DBNAME = "githubstars"
 	//COLLECTION should be replaced to search title
-	COLLECTION = "stars"
+	COLLECTION = "stars1"
 )
 
 type githubstars struct {
@@ -25,6 +25,7 @@ type githubstars struct {
 	mongosession *mgo.Session
 	db           *mgo.Collection
 	limit        int
+	dbname       string
 }
 
 type StarsInfo struct {
@@ -51,6 +52,7 @@ func Init() *githubstars {
 	gs.mongosession = initMongo()
 	gs.currentrepos = []github.Repository{}
 	gs.limit = 3
+	gs.dbname = ""
 	return gs
 }
 
@@ -67,10 +69,15 @@ func initMongo() *mgo.Session {
 //Show provides output information
 func (gs *githubstars) Show(numstars, str, language string) {
 	query := ""
+	dbname := ""
 	if language != "" {
 		query = fmt.Sprintf("language:%s ", language)
+		dbname += language
 	}
 	query += fmt.Sprintf("stars:%s", numstars)
+	dbname += str
+	dbname += numstars
+	gs.dbname = constructName(dbname)
 	opt := &github.SearchOptions{Sort: "stars"}
 	log.Printf("Request to Github...")
 	result, _, err := gs.client.Search.Repositories(query, opt)
@@ -79,7 +86,7 @@ func (gs *githubstars) Show(numstars, str, language string) {
 	}
 
 	gs.currentrepos = result.Repositories
-	gs.db = gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	gs.db = gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
 	repos := []StarsInfo{}
 	log.Printf("Results...")
 	for i, repo := range result.Repositories {
@@ -95,8 +102,7 @@ func (gs *githubstars) Show(numstars, str, language string) {
 		gs.repos[i] = repo
 		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
 	}
-
-	gs.outputResults(repos, "stars1")
+	gs.outputResults(repos, gs.dbname, COLLECTION)
 
 }
 
@@ -106,7 +112,7 @@ func (gs *githubstars) Commit() {
 		log.Printf("Can't find current repositories for commit")
 		return
 	}
-	db := gs.mongosession.DB(DBNAME).C(gs.getWriteCollectionName())
+	db := gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
 	db.DropCollection()
 	for _, repo := range gs.currentrepos {
 		gs.setData(*repo.FullName, *repo.StargazersCount)
@@ -116,7 +122,7 @@ func (gs *githubstars) Commit() {
 
 //CompareWith provides comparation with results
 func (gs *githubstars) CompareWith(dbtitle string) {
-	data := gs.getData(dbtitle)
+	data := gs.getData(dbtitle, COLLECTION)
 	if len(data) == 0 {
 		log.Fatal(fmt.Sprintf("Collection %s is not found", dbtitle))
 	}
@@ -124,13 +130,16 @@ func (gs *githubstars) CompareWith(dbtitle string) {
 	for _, value := range gs.repos {
 		alldata = append(alldata, StarsInfo{*value.FullName, *value.StargazersCount})
 	}
-	gs.outputResults(alldata, dbtitle)
+	gs.outputResults(alldata, dbtitle, COLLECTION)
 
 }
 
 //This private method provides output and comparing and formatting results
-func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
-	result1 := gs.getData(collname)
+func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collname string) {
+	result1 := gs.getData(dbname, collname)
+	if len(result1) == 0 {
+		log.Printf(fmt.Sprintf("db %s or collection %s not found", dbname, collname))
+	}
 	//result2 := gs.getData("stars3")
 	summ := summary{}
 	summ.most = record{}
@@ -165,9 +174,10 @@ func (gs *githubstars) outputResults(current []StarsInfo, collname string) {
 }
 
 //get data from mongo
-func (gs *githubstars) getData(collname string) []StarsInfo {
+func (gs *githubstars) getData(dbname, collname string) []StarsInfo {
 	var sinfo []StarsInfo
-	db := gs.mongosession.DB(DBNAME).C(collname)
+	fmt.Println("DBNAEM: ", dbname)
+	db := gs.mongosession.DB(dbname).C(collname)
 	err := db.Find(bson.M{}).All(&sinfo)
 	if err != nil {
 		panic(err)
@@ -209,4 +219,19 @@ func (gs *githubstars) setData(title string, starscount int) {
 func splitDescription(desc string) []string {
 	result := strings.Split(desc, " ")
 	return result
+}
+
+//This method provides construction valid name for mongodb
+//For example: if we have query ">1000",
+//constructName will output "gr1000"
+func constructName(title string) string {
+	if strings.Index(title, ">") != -1 {
+		return strings.Replace(title, ">", "gr", 1)
+	}
+
+	if strings.Index(title, "<") != -1 {
+		return strings.Replace(title, "<", "lo", 1)
+	}
+
+	return title
 }
