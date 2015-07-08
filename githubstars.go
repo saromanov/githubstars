@@ -176,7 +176,6 @@ func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collnam
 //get data from mongo
 func (gs *githubstars) getData(dbname, collname string) []StarsInfo {
 	var sinfo []StarsInfo
-	fmt.Println("DBNAEM: ", dbname)
 	db := gs.mongosession.DB(dbname).C(collname)
 	err := db.Find(bson.M{}).All(&sinfo)
 	if err != nil {
@@ -195,17 +194,8 @@ func (gs *githubstars) collectionSize() int {
 }
 
 //This method returns collection name for writing data
-//It needs because we have limit of number of collections and
-//if reading collection = limit collection, write data to
-//collection1 name.I.E overwwrite data.
 func (gs *githubstars) getWriteCollectionName() string {
 	return "stars1"
-	/*size := gs.collectionSize()
-	if size == 0 || size >= gs.limit {
-		return "stars1"
-	} else {
-		return fmt.Sprintf("%s%d", COLLECTION, size+1)
-	}*/
 }
 
 func (gs *githubstars) setData(title string, starscount int) {
