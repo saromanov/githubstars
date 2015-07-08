@@ -28,6 +28,14 @@ type githubstars struct {
 	dbname       string
 }
 
+//Options ...
+type Options struct {
+	Language        string
+	Query           string
+	Numstars        string
+	Writecollection string
+}
+
 type StarsInfo struct {
 	Title    string
 	NumStars int
@@ -67,20 +75,20 @@ func initMongo() *mgo.Session {
 }
 
 //Show provides output information
-func (gs *githubstars) Show(numstars, str, language string) {
+func (gs *githubstars) Show(opt Options) {
 	query := ""
 	dbname := ""
-	if language != "" {
-		query = fmt.Sprintf("language:%s ", language)
-		dbname += language
+	if opt.Language != "" {
+		query = fmt.Sprintf("language:%s ", opt.Language)
+		dbname += opt.Language
 	}
-	query += fmt.Sprintf("stars:%s", numstars)
-	dbname += str
-	dbname += numstars
+	query += fmt.Sprintf("stars:%s", opt.Numstars)
+	dbname += opt.Query
+	dbname += opt.Numstars
 	gs.dbname = constructName(dbname)
-	opt := &github.SearchOptions{Sort: "stars"}
+	opts := &github.SearchOptions{Sort: "stars"}
 	log.Printf("Request to Github...")
-	result, _, err := gs.client.Search.Repositories(query, opt)
+	result, _, err := gs.client.Search.Repositories(query, opts)
 	if err != nil {
 		panic(err)
 	}
