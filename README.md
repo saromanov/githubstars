@@ -15,7 +15,7 @@ import
 
 func main() {
 	res := githubstars.Init()
-	res.Get(">2000", "","go")
+	res.Show(githubstars.Options{Numstars: ">2000", Language: "go"})
 }
 ```
 
