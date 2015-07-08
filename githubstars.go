@@ -117,7 +117,7 @@ func (gs *githubstars) Commit() {
 func (gs *githubstars) CompareWith(dbtitle string) {
 	data := gs.getData(dbtitle)
 	if len(data) == 0 {
-		return
+		log.Fatal(fmt.Sprintf("Collection %s is not found", dbtitle))
 	}
 	alldata := []StarsInfo{}
 	for _, value := range gs.repos {
