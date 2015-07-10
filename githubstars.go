@@ -95,7 +95,7 @@ func (gs *githubstars) Show(opt Options) {
 
 	gs.currentrepos = result.Repositories
 	gs.db = gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
-	repos := []StarsInfo{}
+	repomap := map[string]StarsInfo{}
 	log.Printf("Results...")
 	for i, repo := range result.Repositories {
 		words := splitDescription(*repo.Description)
@@ -108,20 +108,28 @@ func (gs *githubstars) Show(opt Options) {
 			}
 		}
 		gs.repos[i] = repo
-		repos = append(repos, StarsInfo{*repo.FullName, *repo.StargazersCount})
+		repomap[*repo.FullName] = StarsInfo{*repo.FullName, *repo.StargazersCount}
 	}
-	gs.outputResults(repos, gs.dbname, COLLECTION)
+	gs.outputResults(repomap, gs.dbname, COLLECTION)
 
 }
 
 //Commit provides write to mongodb current results
-func (gs *githubstars) Commit() {
+func (gs *githubstars) Commit(name string) {
 	if len(gs.currentrepos) == 0 {
 		log.Fatal("Can't find current repositories for commit")
 		return
 	}
-	db := gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
+
+	if name == "" {
+		name = gs.getWriteCollectionName()
+	} else {
+
+	}
+
+	db := gs.mongosession.DB(gs.dbname).C(name)
 	db.DropCollection()
+	gs.db = db
 	for _, repo := range gs.currentrepos {
 		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
@@ -131,14 +139,14 @@ func (gs *githubstars) Commit() {
 //CompareWith provides comparation with results
 func (gs *githubstars) CompareWith(dbtitle string) {
 	data := gs.getData(dbtitle, COLLECTION)
+	repomap := map[string]StarsInfo{}
 	if len(data) == 0 {
 		log.Fatal(fmt.Sprintf("Collection %s is not found", dbtitle))
 	}
-	alldata := []StarsInfo{}
 	for _, value := range gs.repos {
-		alldata = append(alldata, StarsInfo{*value.FullName, *value.StargazersCount})
+		repomap[*value.FullName] = StarsInfo{*value.FullName, *value.StargazersCount}
 	}
-	gs.outputResults(alldata, dbtitle, COLLECTION)
+	gs.outputResults(repomap, dbtitle, COLLECTION)
 
 }
 
@@ -156,18 +164,21 @@ func (gs *githubstars) AvailableResults(opt Options) []string {
 }
 
 //This private method provides output and comparing and formatting results
-func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collname string) {
+func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string, collname string) {
 	result1 := gs.getData(dbname, collname)
 	if len(result1) == 0 {
 		log.Printf(fmt.Sprintf("db %s or collection %s not found", dbname, collname))
 	}
-	//result2 := gs.getData("stars3")
 	summ := summary{}
 	summ.most = record{}
 	summ.fewest_stars = record{}
 	summ.fewest_stars.item = 99999999
-	for i, repo := range result1 {
-		diff := current[i].NumStars - repo.NumStars
+	for _, repo := range result1 {
+		curr, ok := current[repo.Title]
+		if !ok {
+			continue
+		}
+		diff := curr.NumStars - repo.NumStars
 		diffmsg := ""
 		if summ.most.item < diff {
 			summ.most.item = diff
@@ -182,9 +193,9 @@ func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collnam
 		if diff > 0 {
 			diffmsg = fmt.Sprintf("(+ %d)", diff)
 		} else if diff < 0 {
-			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-current[i].NumStars)
+			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-curr.NumStars)
 		}
-		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars, diffmsg)
+		fmt.Println(repo.Title, repo.NumStars, curr.NumStars, diffmsg)
 	}
 
 	log.Printf("Summary...")
