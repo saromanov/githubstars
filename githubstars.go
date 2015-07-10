@@ -142,6 +142,19 @@ func (gs *githubstars) CompareWith(dbtitle string) {
 
 }
 
+//AvailableResults returns list of available collections with results to db name
+func (gs *githubstars) AvailableResults(opt Options) []string {
+	dbname := ""
+	dbname += opt.Query
+	dbname += opt.Numstars
+	fmt.Println(dbname)
+	colls, err := gs.mongosession.DB(constructName(dbname)).CollectionNames()
+	if err != nil {
+		panic(err)
+	}
+	return colls
+}
+
 //This private method provides output and comparing and formatting results
 func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collname string) {
 	result1 := gs.getData(dbname, collname)
