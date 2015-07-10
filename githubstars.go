@@ -169,7 +169,7 @@ func (gs *githubstars) outputResults(current []StarsInfo, dbname string, collnam
 		if diff > 0 {
 			diffmsg = fmt.Sprintf("(+ %d)", diff)
 		} else if diff < 0 {
-			diffmsg = fmt.Sprintf("(- %d", repo.NumStars-current[i].NumStars)
+			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-current[i].NumStars)
 		}
 		fmt.Println(repo.Title, repo.NumStars, current[i].NumStars, diffmsg)
 	}
