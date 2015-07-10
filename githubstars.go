@@ -153,9 +153,9 @@ func (gs *githubstars) CompareWith(dbtitle string) {
 //AvailableResults returns list of available collections with results to db name
 func (gs *githubstars) AvailableResults(opt Options) []string {
 	dbname := ""
+	dbname += opt.Language
 	dbname += opt.Query
 	dbname += opt.Numstars
-	fmt.Println(dbname)
 	colls, err := gs.mongosession.DB(constructName(dbname)).CollectionNames()
 	if err != nil {
 		panic(err)
