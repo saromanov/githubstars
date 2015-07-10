@@ -26,6 +26,10 @@ func main() {
 ### Show(opt Options)
 Output results
 
+## Commit(name string)
+Store results in mongo with namse as collection.
+If name is empty, results will store in collection with default name
+
 ### CompareWith(dbtitle string)
 Compare results with one of the prevous results
 
