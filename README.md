@@ -19,3 +19,16 @@ func main() {
 }
 ```
 
+## API
+
+### githubstars.Init()
+
+### Show(opt Options)
+Output results
+
+### CompareWith(dbtitle string)
+Compare results with one of the prevous results
+
+### AvailableResults(opt Options)
+Get all of names with this query
+
