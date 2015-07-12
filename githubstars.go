@@ -81,6 +81,12 @@ func initMongo() *mgo.Session {
 
 //Show provides output information
 func (gs *githubstars) Show(opt Options) {
+	repomap := gs.getRepoInfo(opt)
+	gs.outputResults(repomap, gs.dbname, COLLECTION)
+
+}
+
+func (gs *githubstars) getRepoInfo(opt Options) map[string]StarsInfo {
 	query := ""
 	dbname := ""
 	if opt.Language != "" {
@@ -122,8 +128,8 @@ func (gs *githubstars) Show(opt Options) {
 		gs.repos[i] = repo
 		repomap[*repo.FullName] = StarsInfo{*repo.FullName, *repo.StargazersCount}
 	}
-	gs.outputResults(repomap, gs.dbname, COLLECTION)
 
+	return repomap
 }
 
 //Commit provides write to mongodb current results
