@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -39,6 +40,10 @@ type Options struct {
 type StarsInfo struct {
 	Title    string
 	NumStars int
+}
+
+type TimeInfo struct {
+	Date time.Time
 }
 
 //summary provides some stat information before output
@@ -97,6 +102,13 @@ func (gs *githubstars) Show(opt Options) {
 	gs.db = gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
 	repomap := map[string]StarsInfo{}
 	log.Printf("Results...")
+	datetime, msg := gs.getTimeInfo(gs.dbname, COLLECTION)
+	if msg != "" {
+		log.Printf(msg)
+	} else {
+		fmt.Println("Results for the time: ", datetime)
+		fmt.Println(" ")
+	}
 	for i, repo := range result.Repositories {
 		words := splitDescription(*repo.Description)
 		for _, word := range words {
@@ -116,6 +128,7 @@ func (gs *githubstars) Show(opt Options) {
 
 //Commit provides write to mongodb current results
 func (gs *githubstars) Commit(name string) {
+	fmt.Println(bson.Now())
 	if len(gs.currentrepos) == 0 {
 		log.Fatal("Can't find current repositories for commit")
 		return
@@ -130,6 +143,7 @@ func (gs *githubstars) Commit(name string) {
 	db := gs.mongosession.DB(gs.dbname).C(name)
 	db.DropCollection()
 	gs.db = db
+	gs.db.Insert(TimeInfo{bson.Now()})
 	for _, repo := range gs.currentrepos {
 		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
@@ -223,6 +237,16 @@ func (gs *githubstars) getData(dbname, collname string) []StarsInfo {
 		panic(err)
 	}
 	return sinfo
+}
+
+func (gs *githubstars) getTimeInfo(dbname, collname string) (TimeInfo, string) {
+	var timeinfo TimeInfo
+	db := gs.mongosession.DB(dbname).C(collname)
+	err := db.Find(bson.M{}).One(&timeinfo)
+	if err != nil {
+		return TimeInfo{}, "Cant find date field"
+	}
+	return timeinfo, ""
 }
 
 //return number of records from collection
