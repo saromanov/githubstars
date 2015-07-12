@@ -163,6 +163,15 @@ func (gs *githubstars) AvailableResults(opt Options) []string {
 	return colls
 }
 
+//PopularWords provides showing popular words from repos description
+func (gs *githubstars) PopularWords() {
+	for key, value := range gs.popularwords {
+		if value > 0 && len(key) > 2 {
+			fmt.Println(fmt.Sprintf("%s %d", key, value))
+		}
+	}
+}
+
 //This private method provides output and comparing and formatting results
 func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string, collname string) {
 	result1 := gs.getData(dbname, collname)
