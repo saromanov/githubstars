@@ -104,7 +104,7 @@ func (gs *githubstars) Show(opt Options) {
 			if !ok {
 				gs.popularwords[word] = 0
 			} else {
-				gs.popularwords[word] += 1
+				gs.popularwords[word]++
 			}
 		}
 		gs.repos[i] = repo
