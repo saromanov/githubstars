@@ -23,6 +23,9 @@ func main() {
 
 ### githubstars.Init()
 
+### Set(opt Options)
+Set provides store information about repos before compare in Show
+
 ### Show(opt Options)
 Output results
 
@@ -35,4 +38,7 @@ Compare results with one of the prevous results
 
 ### AvailableResults(opt Options)
 Get all of names with this query
+
+### PopularWords()
+Return popular words from repository description
 

@@ -79,6 +79,7 @@ func initMongo() *mgo.Session {
 	return sess
 }
 
+//Set provides store information about repos before compare in Show
 func (gs *githubstars) Set(opt Options) {
 	repomap := gs.getRepoInfo(opt)
 	if len(repomap) == 0 {
