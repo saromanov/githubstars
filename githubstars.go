@@ -79,6 +79,15 @@ func initMongo() *mgo.Session {
 	return sess
 }
 
+func (gs *githubstars) Set(opt Options) {
+	repomap := gs.getRepoInfo(opt)
+	if len(repomap) == 0 {
+		panic("Can't get data from github")
+	}
+	log.Printf("Store information")
+	gs.Commit("")
+}
+
 //Show provides output information
 func (gs *githubstars) Show(opt Options) {
 	repomap := gs.getRepoInfo(opt)
