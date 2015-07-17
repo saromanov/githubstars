@@ -217,7 +217,7 @@ func (gs *githubstars) outputResults(current map[string]starsinfo, dbname string
 	summ.feweststars = record{}
 	summ.feweststars.item = 99999999
 	summ.total = record{}
-	summ.total.item = 1.0
+	summ.total.item = 0.0
 	count := 0
 	for _, repo := range result1 {
 		curr, ok := current[repo.Title]
@@ -248,11 +248,20 @@ func (gs *githubstars) outputResults(current map[string]starsinfo, dbname string
 
 	log.Printf("Summary...")
 	fmt.Println(" ")
-	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
-	fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
-		summ.feweststars.title, summ.feweststars.item))
+	if summ.most.title != "" {
+		fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
+	}
+
+	if summ.feweststars.title != "" {
+		fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
+			summ.feweststars.title, summ.feweststars.item))
+	}
+
 	fmt.Println(fmt.Sprintf("Total number of new stars: %d", summ.total.item))
-	fmt.Println(fmt.Sprintf("Average number of new starts: %d", summ.total.item/count))
+
+	if count > 0 {
+		fmt.Println(fmt.Sprintf("Average number of new starts: %d", summ.total.item/count))
+	}
 }
 
 //get data from mongo
