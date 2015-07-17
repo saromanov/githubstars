@@ -248,6 +248,7 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
 	fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
 		summ.fewest_stars.title, summ.fewest_stars.item))
+	fmt.Println(fmt.Sprintf("Total number of new stars: %d", summ.total.item))
 	fmt.Println(fmt.Sprintf("Average number of new starts: %d", summ.total.item/count))
 }
 
