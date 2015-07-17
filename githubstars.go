@@ -50,6 +50,7 @@ type TimeInfo struct {
 type summary struct {
 	most         record
 	fewest_stars record
+	avg          record
 }
 
 type record struct {
@@ -212,12 +213,16 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 	summ.most = record{}
 	summ.fewest_stars = record{}
 	summ.fewest_stars.item = 99999999
+	summ.avg = record{}
+	summ.avg.item = 1.0
+	count := 0
 	for _, repo := range result1 {
 		curr, ok := current[repo.Title]
 		if !ok {
 			continue
 		}
 		diff := curr.NumStars - repo.NumStars
+		summ.avg.item += diff
 		diffmsg := ""
 		if summ.most.item < diff {
 			summ.most.item = diff
@@ -235,6 +240,7 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-curr.NumStars)
 		}
 		fmt.Println(repo.Title, repo.NumStars, curr.NumStars, diffmsg)
+		count += 1
 	}
 
 	log.Printf("Summary...")
@@ -242,6 +248,7 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
 	fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
 		summ.fewest_stars.title, summ.fewest_stars.item))
+	fmt.Println(fmt.Sprintf("Average number of new starts: %d", summ.avg.item/count))
 }
 
 //get data from mongo
