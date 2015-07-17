@@ -18,6 +18,7 @@ const (
 	COLLECTION = "stars1"
 )
 
+//TODO..
 type githubstars struct {
 	client       *github.Client
 	popularwords map[string]int
@@ -37,20 +38,20 @@ type Options struct {
 	Writecollection string
 }
 
-type StarsInfo struct {
+type starsinfo struct {
 	Title    string
 	NumStars int
 }
 
-type TimeInfo struct {
+type timeinfo struct {
 	Date time.Time
 }
 
 //summary provides some stat information before output
 type summary struct {
-	most         record
-	fewest_stars record
-	total        record
+	most        record
+	feweststars record
+	total       record
 }
 
 type record struct {
@@ -58,6 +59,7 @@ type record struct {
 	item  int
 }
 
+//Init provides initialization of githubstars
 func Init() *githubstars {
 	gs := new(githubstars)
 	gs.client = github.NewClient(nil)
@@ -97,7 +99,8 @@ func (gs *githubstars) Show(opt Options) {
 
 }
 
-func (gs *githubstars) getRepoInfo(opt Options) map[string]StarsInfo {
+//This method provides getting information from github
+func (gs *githubstars) getRepoInfo(opt Options) map[string]starsinfo {
 	query := ""
 	dbname := ""
 	if opt.Language != "" {
@@ -117,8 +120,8 @@ func (gs *githubstars) getRepoInfo(opt Options) map[string]StarsInfo {
 
 	gs.currentrepos = result.Repositories
 	gs.db = gs.mongosession.DB(gs.dbname).C(gs.getWriteCollectionName())
-	repomap := map[string]StarsInfo{}
-	log.Printf("Results...")
+	repomap := map[string]starsinfo{}
+	log.Printf(fmt.Sprintf("Results...\n"))
 	datetime, msg := gs.getTimeInfo(gs.dbname, COLLECTION)
 	if msg != "" {
 		log.Printf(msg)
@@ -137,7 +140,7 @@ func (gs *githubstars) getRepoInfo(opt Options) map[string]StarsInfo {
 			}
 		}
 		gs.repos[i] = repo
-		repomap[*repo.FullName] = StarsInfo{*repo.FullName, *repo.StargazersCount}
+		repomap[*repo.FullName] = starsinfo{*repo.FullName, *repo.StargazersCount}
 	}
 
 	return repomap
@@ -160,7 +163,7 @@ func (gs *githubstars) Commit(name string) {
 	db := gs.mongosession.DB(gs.dbname).C(name)
 	db.DropCollection()
 	gs.db = db
-	gs.db.Insert(TimeInfo{bson.Now()})
+	gs.db.Insert(timeinfo{bson.Now()})
 	for _, repo := range gs.currentrepos {
 		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
@@ -170,12 +173,12 @@ func (gs *githubstars) Commit(name string) {
 //CompareWith provides comparation with results
 func (gs *githubstars) CompareWith(dbtitle string) {
 	data := gs.getData(dbtitle, COLLECTION)
-	repomap := map[string]StarsInfo{}
+	repomap := map[string]starsinfo{}
 	if len(data) == 0 {
 		log.Fatal(fmt.Sprintf("Collection %s is not found", dbtitle))
 	}
 	for _, value := range gs.repos {
-		repomap[*value.FullName] = StarsInfo{*value.FullName, *value.StargazersCount}
+		repomap[*value.FullName] = starsinfo{*value.FullName, *value.StargazersCount}
 	}
 	gs.outputResults(repomap, dbtitle, COLLECTION)
 
@@ -204,15 +207,15 @@ func (gs *githubstars) PopularWords() {
 }
 
 //This private method provides output and comparing and formatting results
-func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string, collname string) {
+func (gs *githubstars) outputResults(current map[string]starsinfo, dbname string, collname string) {
 	result1 := gs.getData(dbname, collname)
 	if len(result1) == 0 {
 		log.Printf(fmt.Sprintf("db %s or collection %s not found", dbname, collname))
 	}
 	summ := summary{}
 	summ.most = record{}
-	summ.fewest_stars = record{}
-	summ.fewest_stars.item = 99999999
+	summ.feweststars = record{}
+	summ.feweststars.item = 99999999
 	summ.total = record{}
 	summ.total.item = 1.0
 	count := 0
@@ -229,9 +232,9 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 			summ.most.title = repo.Title
 		}
 
-		if summ.fewest_stars.item >= diff {
-			summ.fewest_stars.item = diff
-			summ.fewest_stars.title = repo.Title
+		if summ.feweststars.item >= diff {
+			summ.feweststars.item = diff
+			summ.feweststars.title = repo.Title
 		}
 
 		if diff > 0 {
@@ -240,21 +243,21 @@ func (gs *githubstars) outputResults(current map[string]StarsInfo, dbname string
 			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-curr.NumStars)
 		}
 		fmt.Println(repo.Title, repo.NumStars, curr.NumStars, diffmsg)
-		count += 1
+		count++
 	}
 
 	log.Printf("Summary...")
 	fmt.Println(" ")
 	fmt.Println(fmt.Sprintf("Most number of new stars: %s %d", summ.most.title, summ.most.item))
 	fmt.Println(fmt.Sprintf("Fewest number of new stars: %s %d",
-		summ.fewest_stars.title, summ.fewest_stars.item))
+		summ.feweststars.title, summ.feweststars.item))
 	fmt.Println(fmt.Sprintf("Total number of new stars: %d", summ.total.item))
 	fmt.Println(fmt.Sprintf("Average number of new starts: %d", summ.total.item/count))
 }
 
 //get data from mongo
-func (gs *githubstars) getData(dbname, collname string) []StarsInfo {
-	var sinfo []StarsInfo
+func (gs *githubstars) getData(dbname, collname string) []starsinfo {
+	var sinfo []starsinfo
 	db := gs.mongosession.DB(dbname).C(collname)
 	err := db.Find(bson.M{}).All(&sinfo)
 	if err != nil {
@@ -263,14 +266,14 @@ func (gs *githubstars) getData(dbname, collname string) []StarsInfo {
 	return sinfo
 }
 
-func (gs *githubstars) getTimeInfo(dbname, collname string) (TimeInfo, string) {
-	var timeinfo TimeInfo
+func (gs *githubstars) getTimeInfo(dbname, collname string) (timeinfo, string) {
+	var ti timeinfo
 	db := gs.mongosession.DB(dbname).C(collname)
-	err := db.Find(bson.M{}).One(&timeinfo)
+	err := db.Find(bson.M{}).One(&ti)
 	if err != nil {
-		return TimeInfo{}, "Cant find date field"
+		return timeinfo{}, "Cant find date field"
 	}
-	return timeinfo, ""
+	return ti, ""
 }
 
 //return number of records from collection
@@ -288,7 +291,7 @@ func (gs *githubstars) getWriteCollectionName() string {
 }
 
 func (gs *githubstars) setData(title string, starscount int) {
-	err := gs.db.Insert(&StarsInfo{title, starscount})
+	err := gs.db.Insert(&starsinfo{title, starscount})
 	if err != nil {
 		panic(err)
 	}
