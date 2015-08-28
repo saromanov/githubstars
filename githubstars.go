@@ -60,21 +60,21 @@ type record struct {
 }
 
 //Init provides initialization of githubstars
-func Init() *githubstars {
+func Init(mongoaddr string) *githubstars {
 	gs := new(githubstars)
 	gs.client = github.NewClient(nil)
 	gs.popularwords = map[string]int{}
 	gs.repos = map[int]github.Repository{}
-	gs.mongosession = initMongo()
+	gs.mongosession = initMongo(mongoaddr)
 	gs.currentrepos = []github.Repository{}
 	gs.limit = 3
 	gs.dbname = ""
 	return gs
 }
 
-func initMongo() *mgo.Session {
+func initMongo(addr string) *mgo.Session {
 	log.Printf("Connection to the Mongodb...")
-	sess, err := mgo.Dial("localhost:27017")
+	sess, err := mgo.Dial(addr)
 	if err != nil {
 		fmt.Printf("Can't connect to mongo, go error %v\n", err)
 		os.Exit(1)
