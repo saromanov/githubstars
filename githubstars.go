@@ -147,6 +147,7 @@ func (gs *githubstars) getRepoInfo(opt Options) map[string]starsinfo {
 }
 
 //Commit provides write to mongodb current results
+//name - collection name
 func (gs *githubstars) Commit(name string) {
 	if len(gs.currentrepos) == 0 {
 		log.Fatal("Can't find current repositories for commit")
