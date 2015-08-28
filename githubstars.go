@@ -148,6 +148,7 @@ func (gs *githubstars) getRepoInfo(opt Options) map[string]starsinfo {
 
 //Commit provides write to mongodb current results
 //name - collection name
+// If name is "", write to collection by default
 func (gs *githubstars) Commit(name string) {
 	if len(gs.currentrepos) == 0 {
 		log.Fatal("Can't find current repositories for commit")
@@ -167,6 +168,8 @@ func (gs *githubstars) Commit(name string) {
 	for _, repo := range gs.currentrepos {
 		gs.setData(*repo.FullName, *repo.StargazersCount)
 	}
+
+	log.Printf(fmt.Sprintf("Commit new data to db %s", gs.dbname))
 
 }
 
