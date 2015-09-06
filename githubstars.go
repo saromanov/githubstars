@@ -30,7 +30,7 @@ type githubstars struct {
 	dbname       string
 }
 
-//Options ...
+//Options provides specification before Init
 type Options struct {
 	Language        string
 	Query           string
@@ -222,7 +222,7 @@ func (gs *githubstars) outputResults(current map[string]starsinfo, dbname string
 	summ.total = record{}
 	summ.total.item = 0.0
 	count := 0
-	for _, repo := range result1 {
+	for i, repo := range result1 {
 		curr, ok := current[repo.Title]
 		if !ok {
 			continue
@@ -245,7 +245,7 @@ func (gs *githubstars) outputResults(current map[string]starsinfo, dbname string
 		} else if diff < 0 {
 			diffmsg = fmt.Sprintf("(- %d)", repo.NumStars-curr.NumStars)
 		}
-		fmt.Println(repo.Title, repo.NumStars, curr.NumStars, diffmsg)
+		fmt.Println(fmt.Sprintf("%d: %s %d %d %s", i, repo.Title, repo.NumStars, curr.NumStars, diffmsg))
 		count++
 	}
 
