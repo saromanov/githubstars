@@ -7,4 +7,6 @@ type Backend interface{
 
 	//Commit data
 	Commit(dbname, collname string)
+
+	SetData(title string, starscount int)
 }
