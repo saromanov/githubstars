@@ -1,4 +1,4 @@
-package githubstars
+package backend
 
 //Backend provides interface for backends for storing info
 type Backend interface{
